@@ -1,7 +1,9 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 
 const app = express();
+
+const bodyParser = require('body-parser');
+
 const jsonParser = bodyParser.json();
 
 module.exports = (db) => {
@@ -21,35 +23,35 @@ module.exports = (db) => {
       || startLongitude < -180
       || startLongitude > 180
     ) {
-      return res.send({
+      return res.status(400).send({
         error_code: 'VALIDATION_ERROR',
         message: 'Start latitude and longitude must be between -90 - 90 and -180 to 180 degrees respectively',
       });
     }
 
     if (endLatitude < -90 || endLatitude > 90 || endLongitude < -180 || endLongitude > 180) {
-      return res.send({
+      return res.status(400).send({
         error_code: 'VALIDATION_ERROR',
         message: 'End latitude and longitude must be between -90 - 90 and -180 to 180 degrees respectively',
       });
     }
 
     if (typeof riderName !== 'string' || riderName.length < 1) {
-      return res.send({
+      return res.status(400).send({
         error_code: 'VALIDATION_ERROR',
         message: 'Rider name must be a non empty string',
       });
     }
 
     if (typeof driverName !== 'string' || driverName.length < 1) {
-      return res.send({
+      return res.status(400).send({
         error_code: 'VALIDATION_ERROR',
         message: 'Rider name must be a non empty string',
       });
     }
 
     if (typeof driverVehicle !== 'string' || driverVehicle.length < 1) {
-      return res.send({
+      return res.status(400).send({
         error_code: 'VALIDATION_ERROR',
         message: 'Rider name must be a non empty string',
       });
@@ -65,66 +67,92 @@ module.exports = (db) => {
       req.body.driver_vehicle,
     ];
 
-    const result = db.run('INSERT INTO Rides(startLat, startLong, endLat, endLong, riderName, driverName, driverVehicle) VALUES (?, ?, ?, ?, ?, ?, ?)', values, (err) => {
+    db.run('INSERT INTO Rides(startLat, startLong, endLat, endLong, riderName, driverName, driverVehicle) VALUES (?, ?, ?, ?, ?, ?, ?)', values, function getCreatedRide(err) {
       if (err) {
-        return res.send({
+        return res.status(500).send({
           error_code: 'SERVER_ERROR',
           message: 'Unknown error',
         });
       }
 
-      db.all('SELECT * FROM Rides WHERE rideID = ?', this.lastID, (selectError, rows) => {
+      db.get('SELECT * FROM Rides WHERE rideID = ?', this.lastID, (selectError, row) => {
         if (selectError) {
-          return res.send({
+          return res.status(500).send({
             error_code: 'SERVER_ERROR',
             message: 'Unknown error',
           });
         }
 
-        return res.send(rows);
+        return res.send(row);
       });
       return null;
     });
-    return result;
+    return null;
   });
 
   app.get('/rides', (req, res) => {
-    db.all('SELECT * FROM Rides', (err, rows) => {
+    let numRows;
+    let numPages;
+    let { pageIndex, itemsPerPage } = req.query;
+    itemsPerPage = parseInt(itemsPerPage, 10) || 1;
+    pageIndex = parseInt(pageIndex, 10) || 1;
+    const pageIndexNumber = pageIndex > 0 ? pageIndex : 1;
+    const skip = (pageIndexNumber - 1) * itemsPerPage;
+    const limit = `${skip},${itemsPerPage}`;
+
+    db.get('SELECT count(*) as numRows FROM Rides', (err, row) => {
       if (err) {
-        return res.send({
+        return res.status(500).send({
           error_code: 'SERVER_ERROR',
           message: 'Unknown error',
         });
       }
 
-      if (rows.length === 0) {
-        return res.send({
-          error_code: 'RIDES_NOT_FOUND_ERROR',
-          message: 'Could not find any rides',
-        });
-      }
+      numRows = row.numRows;
+      numPages = Math.ceil(numRows / itemsPerPage);
 
-      return res.send(rows);
+      db.all(`SELECT * FROM Rides DESC LIMIT ${limit}`, (pgError, items) => {
+        if (pgError) {
+          return res.status(500).send({
+            error_code: 'SERVER_ERROR',
+            message: 'Unknown error',
+          });
+        }
+        const responsePayload = {
+          items,
+        };
+        responsePayload.pagination = {
+          pageIndex: pageIndexNumber,
+          previous: pageIndexNumber > 1 ? pageIndexNumber - 1 : '#',
+          next: pageIndexNumber < numPages ? pageIndexNumber + 1 : '#',
+          itemsPerPage,
+          totalItems: numRows,
+          currentItemCount: items.length,
+          totalPages: Math.ceil(numRows / itemsPerPage),
+        };
+        return res.json(responsePayload);
+      });
+      return null;
     });
   });
 
   app.get('/rides/:id', (req, res) => {
-    db.all(`SELECT * FROM Rides WHERE rideID='${req.params.id}'`, (err, rows) => {
+    db.get(`SELECT * FROM Rides WHERE rideID='${req.params.id}'`, (err, row) => {
       if (err) {
-        return res.send({
+        return res.status(500).send({
           error_code: 'SERVER_ERROR',
           message: 'Unknown error',
         });
       }
 
-      if (rows.length === 0) {
-        return res.send({
+      if (!row) {
+        return res.status(404).send({
           error_code: 'RIDES_NOT_FOUND_ERROR',
           message: 'Could not find any rides',
         });
       }
 
-      return res.send(rows);
+      return res.send(row);
     });
   });
 

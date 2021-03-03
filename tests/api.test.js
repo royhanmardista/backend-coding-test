@@ -58,7 +58,7 @@ describe('API tests', () => {
           start_lat: 10000,
         })
         .expect('Content-Type', /json/)
-        .expect(200, done);
+        .expect(400, done);
     });
   });
 
@@ -71,7 +71,7 @@ describe('API tests', () => {
           end_lat: 10000,
         })
         .expect('Content-Type', /json/)
-        .expect(200, done);
+        .expect(400, done);
     });
   });
 
@@ -84,7 +84,7 @@ describe('API tests', () => {
           driver_vehicle: 10000,
         })
         .expect('Content-Type', /json/)
-        .expect(200, done);
+        .expect(400, done);
     });
   });
 
@@ -97,7 +97,7 @@ describe('API tests', () => {
           rider_name: 10000,
         })
         .expect('Content-Type', /json/)
-        .expect(200, done);
+        .expect(400, done);
     });
   });
 
@@ -110,7 +110,7 @@ describe('API tests', () => {
           driver_name: 10000,
         })
         .expect('Content-Type', /json/)
-        .expect(200, done);
+        .expect(400, done);
     });
   });
 
@@ -137,7 +137,7 @@ describe('API tests', () => {
       request(app)
         .get('/rides/random')
         .expect('Content-Type', /json/)
-        .expect(200, done);
+        .expect(404, done);
     });
   });
 });

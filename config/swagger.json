@@ -1,0 +1,182 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This is ducumentation for rides for xendit test",
+    "version": "1.0.0",
+    "title": "Swagger Xendit",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "email": "apiteam@swagger.io"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "ridestore.swagger.io",
+  "basePath": "/v2",
+  "tags": [
+    {
+      "name": "Ride",
+      "description": "This is rides endpoint",
+      "externalDocs": {
+        "description": "Find out more",
+        "url": "http://swagger.io"
+      }
+    }
+  ],
+  "schemes": ["https", "http"],
+  "paths": {
+    "/rides": {
+      "post": {
+        "tags": ["Ride"],
+        "summary": "Add a new ride to the store",
+        "description": "",
+        "operationId": "addRide",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Ride object that need to be save",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Ride"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Invalid input"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Ride"],
+        "summary": "Get list of all rides",
+        "description": "Fetch all rides alongs with pagination object",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "itemsPerPage",
+            "in": "query",
+            "description": "Limit of item that will be shown",
+            "type": "integer"
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "description": "Page index of item list",
+            "type": "integer"
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "description": "Filter paramter to create a fetch query.",
+            "type": "string"
+          },
+          {
+            "name": "sorts",
+            "in": "query",
+            "description": "Which attribute that will be used for sorting.",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Ride"
+            }
+          }
+        }
+      }
+    },
+    "/rides/{rideID}": {
+      "get": {
+        "tags": ["Ride"],
+        "summary": "Find ride by ID",
+        "description": "Returns a single ride",
+        "operationId": "getRideById",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "rideID",
+            "in": "path",
+            "description": "ID of ride to return",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Ride"
+            }
+          },
+          "404": {
+            "description": "Ride not found"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Ride": {
+      "type": "object",
+      "required": [
+        "start_lat",
+        "start_long",
+        "end_lat",
+        "end_long",
+        "rider_name",
+        "driver_name",
+        "driver_vehicle"
+      ],
+      "properties": {
+        "rideID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "start_lat": {
+          "type": "number",
+          "example": 80
+        },
+        "start_long": {
+          "type": "number",
+          "example": 170
+        },
+        "end_lat": {
+          "type": "number",
+          "example": 80
+        },
+        "end_long": {
+          "type": "number",
+          "example": 160
+        },
+        "rider_name": {
+          "type": "string",
+          "example": "paijan"
+        },
+        "driver_name": {
+          "type": "string",
+          "example": "danang"
+        },
+        "driver_vehicle": {
+          "type": "string",
+          "example": "innova"
+        }
+      },
+      "xml": {
+        "name": "Ride"
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Find out more about Swagger",
+    "url": "http://swagger.io"
+  }
+}
